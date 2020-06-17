@@ -3,12 +3,16 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font, Border, Side, Alignment
 import numpy as np
 from datetime import datetime
+import random
+import sys
 
-math_group_rows = 25*7
+num_page = 10
+min1, max1 = 5, 20
+min2, max2 = 5, 20
+
+math_group_rows = 25*num_page
 math_group_cols = 6
 math_group_num = 2
-min1, max1 = 5, 25
-min2, max2 = 5, 25
 
 def gen_outfile_name():
     n = datetime.now()
@@ -23,6 +27,8 @@ class MathTests():
     def __init__(self):
         self.testset_add = []
         self.testset_sub = []
+        self.testset_add_flex = []
+        self.testset_sub_flex = []
         for i in range(min1, max1):
             for j in range(min2, max2):
                 test = [str(i), '+', str(j), '=', ' ', ' ']
@@ -30,10 +36,25 @@ class MathTests():
         print('INFO: total', len(self.testset_add), 'tests in ADD set')
         for i in range(min1, max1):
             for j in range(min2, max2):
+                test1 = [str(i), '+', ' ', '=', str(i+j), ' ']
+                test2 = [' ', '+', str(j), '=', str(i+j), ' ']
+                self.testset_add_flex.append(test1)
+                self.testset_add_flex.append(test2)
+        print('INFO: total', len(self.testset_add_flex), 'tests in ADD_Flex set')
+        for i in range(min1, max1):
+            for j in range(min2, max2):
                 if (i - j) > 0:
                     test = [str(i), '-', str(j), '=', ' ', ' ']
                     self.testset_sub.append(test)
         print('INFO: total', len(self.testset_sub), 'tests in SUB set')
+        for i in range(min1, max1):
+            for j in range(min2, max2):
+                if (i - j) > 0:
+                    test1 = [str(i), '-', ' ', '=', str(i-j), ' ']
+                    test2 = [' ', '-', str(j), '=', str(i-j), ' ']
+                    self.testset_sub_flex.append(test1)
+                    self.testset_sub_flex.append(test2)
+        print('INFO: total', len(self.testset_sub_flex), 'tests in SUB_Flex set')
 
     def get_tests_add(self, num):
         tests = []
@@ -42,12 +63,40 @@ class MathTests():
             tests.append(self.testset_add[test_array[i]])
         return tests
 
+    def get_tests_add_flex(self, num):
+        tests = []
+        test_array = np.random.randint(len(self.testset_add_flex), size=(num))
+        for i in range(num):
+            tests.append(self.testset_add_flex[test_array[i]])
+        return tests
+
     def get_tests_sub(self, num):
         tests = []
         test_array = np.random.randint(len(self.testset_sub), size=(num))
         for i in range(num):
             tests.append(self.testset_sub[test_array[i]])
         return tests
+
+    def get_tests_sub_flex(self, num):
+        tests = []
+        test_array = np.random.randint(len(self.testset_sub_flex), size=(num))
+        for i in range(num):
+            tests.append(self.testset_sub_flex[test_array[i]])
+        return tests
+
+    def get_tests_mix(self, num):
+        add_tests = self.get_tests_add(int(num/2))
+        sub_tests = self.get_tests_sub(int(num/2))
+        mix_tests = add_tests + sub_tests
+        random.shuffle(mix_tests)
+        return mix_tests
+
+    def get_tests_flex_mix(self, num):
+        add_flex_tests = self.get_tests_add_flex(int(num/2))
+        sub_flex_tests = self.get_tests_sub_flex(int(num/2))
+        mix_flex_tests = add_flex_tests + sub_flex_tests
+        random.shuffle(mix_flex_tests)
+        return mix_flex_tests
 
 class XmlWriter():
     def __init__(self):
@@ -87,19 +136,51 @@ class XmlWriter():
     def save_to_file(self):
         self.wb.save(self.dest_filename)
 
-def gen_tests_xml():
+def gen_tests_xml(test_type):
     math = MathTests()
     xml = XmlWriter()
     # get random tests
-    add_tests = math.get_tests_add(math_group_rows)
-    sub_tests = math.get_tests_sub(math_group_rows)
+    if test_type == 'add':
+        row0 = math.get_tests_add(math_group_rows)
+        row1 = math.get_tests_add(math_group_rows)
+    elif test_type == 'sub':
+        row0 = math.get_tests_sub(math_group_rows)
+        row1 = math.get_tests_sub(math_group_rows)
+    elif test_type == 'add_sub':
+        row0 = math.get_tests_add(math_group_rows)
+        row1 = math.get_tests_sub(math_group_rows)
+    elif test_type == 'mix':
+        row0 = math.get_tests_mix(math_group_rows)
+        row1 = math.get_tests_mix(math_group_rows)
+    elif test_type == 'flex':
+        row0 = math.get_tests_add_flex(math_group_rows)
+        row1 = math.get_tests_sub_flex(math_group_rows)
+    elif test_type == 'flex_mix':
+        row0 = math.get_tests_flex_mix(math_group_rows)
+        row1 = math.get_tests_flex_mix(math_group_rows)
+    else:
+        helper()
+
     # write tests to xml file
-    xml.write_group(0, add_tests)
-    xml.write_group(1, sub_tests)
+    xml.write_group(0, row0)
+    xml.write_group(1, row1)
     # save xml file
     xml.save_to_file()
 
-gen_tests_xml()
-gen_tests_xml()
+def helper():
+    print("ERROR: invalid command line. example: python math.py test_type")
+    print(" Valid test_type: 'add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix' ")
+    exit()
 
-print('done')
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        test_type = sys.argv[1]
+        gen_tests_xml(test_type)
+    else:
+        gen_tests_xml('mix')
+        gen_tests_xml('flex')
+        gen_tests_xml('flex')
+        gen_tests_xml('flex_mix')
+        gen_tests_xml('flex_mix')
+
+    print('done')
