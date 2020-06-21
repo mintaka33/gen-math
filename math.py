@@ -130,7 +130,7 @@ class XmlWriter():
     def write_group(self, group_idx, tests):
         start = group_idx * math_group_cols + 1
         end = start + math_group_cols - 1
-        for row_idx, row in enumerate(self.ws.iter_rows(min_col=start, max_row=self.total_rows, max_col=end)):
+        for row_idx, row in enumerate(self.ws.iter_rows(min_col=start, max_row=len(tests), max_col=end)):
             test = tests[row_idx]
             for col_idx, cell in enumerate(row):
                 cell.style = self.mystyle
@@ -153,42 +153,44 @@ class XmlWriter():
         finally:
             Workbook.Close()
             #app.Exit()
-            os.system('del ' + full_infile)
+            #os.system('del ' + full_infile)
 
     def save_to_file(self):
         self.wb.save(self.dest_filename)
         self.export_to_pdf()
 
-def gen_tests_xml(test_type):
+def gen_math_tests(test_types):
     math = MathTests()
-    xml = XmlWriter()
-    # get random tests
-    if test_type == 'add':
-        row0 = math.get_tests_add(math_group_rows)
-        row1 = math.get_tests_add(math_group_rows)
-    elif test_type == 'sub':
-        row0 = math.get_tests_sub(math_group_rows)
-        row1 = math.get_tests_sub(math_group_rows)
-    elif test_type == 'add_sub':
-        row0 = math.get_tests_add(math_group_rows)
-        row1 = math.get_tests_sub(math_group_rows)
-    elif test_type == 'mix':
-        row0 = math.get_tests_mix(math_group_rows)
-        row1 = math.get_tests_mix(math_group_rows)
-    elif test_type == 'flex':
-        row0 = math.get_tests_add_flex(math_group_rows)
-        row1 = math.get_tests_sub_flex(math_group_rows)
-    elif test_type == 'flex_mix':
-        row0 = math.get_tests_flex_mix(math_group_rows)
-        row1 = math.get_tests_flex_mix(math_group_rows)
-    else:
-        helper()
+    row0, row1 = [], []
+    for test_type in test_types:
+        if test_type == 'add':
+            row0 += math.get_tests_add(math_group_rows)
+            row1 += math.get_tests_add(math_group_rows)
+        elif test_type == 'sub':
+            row0 += math.get_tests_sub(math_group_rows)
+            row1 += math.get_tests_sub(math_group_rows)
+        elif test_type == 'add_sub':
+            row0 += math.get_tests_add(math_group_rows)
+            row1 += math.get_tests_sub(math_group_rows)
+        elif test_type == 'mix':
+            row0 += math.get_tests_mix(math_group_rows)
+            row1 += math.get_tests_mix(math_group_rows)
+        elif test_type == 'flex':
+            row0 += math.get_tests_add_flex(math_group_rows)
+            row1 += math.get_tests_sub_flex(math_group_rows)
+        elif test_type == 'flex_mix':
+            row0 += math.get_tests_flex_mix(math_group_rows)
+            row1 += math.get_tests_flex_mix(math_group_rows)
+    return row0, row1
 
-    # write tests to xml file
-    xml.write_group(0, row0)
-    xml.write_group(1, row1)
-    # save xml file
-    xml.save_to_file()
+def export_to_file(row0, row1):
+    xml = XmlWriter()
+    if len(row0) == len(row1) and len(row0) > 0:
+        # write tests to xml file
+        xml.write_group(0, row0)
+        xml.write_group(1, row1)
+        # save xml file
+        xml.save_to_file()
 
 def helper():
     print("ERROR: invalid command line. example: python math.py test_type")
@@ -196,14 +198,6 @@ def helper():
     exit()
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        test_type = sys.argv[1]
-        gen_tests_xml(test_type)
-    else:
-        gen_tests_xml('mix')
-        gen_tests_xml('flex')
-        gen_tests_xml('flex')
-        gen_tests_xml('flex_mix')
-        gen_tests_xml('flex_mix')
-
+    r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
+    export_to_file(r0, r1)
     print('done')
