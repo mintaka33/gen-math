@@ -1,10 +1,13 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font, Border, Side, Alignment
-import numpy as np
 from datetime import datetime
+from win32com import client
+import win32api
+import numpy as np
 import random
 import sys
+import os
 
 num_page = 10
 min1, max1 = 5, 20
@@ -133,8 +136,28 @@ class XmlWriter():
                 cell.style = self.mystyle
                 cell.value = test[col_idx]
 
+    def export_to_pdf(self):
+        xlsx_file = self.dest_filename
+        pdf_file = xlsx_file.split('.xlsx')[0] + '.pdf'
+        full_infile = os.getcwd() + '\\' + xlsx_file
+        full_outfile = os.getcwd() + '\\' + pdf_file
+        app = client.DispatchEx("Excel.Application")
+        app.Interactive = False
+        app.Visible = False
+        Workbook = app.Workbooks.Open(full_infile)
+        try:
+            Workbook.ActiveSheet.ExportAsFixedFormat(0, full_outfile)
+        except Exception as e:
+            print("Failed to convert in PDF format.")
+            print(str(e))
+        finally:
+            Workbook.Close()
+            #app.Exit()
+            os.system('del ' + full_infile)
+
     def save_to_file(self):
         self.wb.save(self.dest_filename)
+        self.export_to_pdf()
 
 def gen_tests_xml(test_type):
     math = MathTests()
