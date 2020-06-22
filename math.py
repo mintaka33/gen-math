@@ -193,7 +193,7 @@ def export_to_file(row0, row1):
         xml.save_to_file()
 
 def helper():
-    print("ERROR: invalid command line. example: python math.py test_type")
+    print("ERROR: invalid command line. example: python math.py ['add', 'sub', 'add_sub', 'mix']")
     print(" Valid test_type: 'add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix' ")
     exit()
 
