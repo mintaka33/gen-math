@@ -155,11 +155,12 @@ class XmlWriter():
             Workbook.ActiveSheet.ExportAsFixedFormat(0, full_outfile)
             print('INFO: done. export PDF file to', full_outfile)
         except Exception as e:
-            print("Failed to convert in PDF format.")
+            print("ERROR: failed to convert in PDF format")
             print(str(e))
         finally:
+            print('INFO: export app exit')
             Workbook.Close()
-            #app.Exit()
+            app.Quit()
             #os.system('del ' + full_infile)
 
     def save_to_file(self):
