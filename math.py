@@ -13,9 +13,12 @@ num_page = 10
 min1, max1 = 5, 20
 min2, max2 = 5, 20
 
-math_group_rows = 25*num_page
+row_per_page = 25
+col_per_page = 2
 math_group_cols = 6
-math_group_num = 2
+tests_per_page = row_per_page * col_per_page
+math_group_rows = row_per_page * num_page
+math_group_num = col_per_page
 
 def gen_outfile_name():
     n = datetime.now()
@@ -128,6 +131,7 @@ class XmlWriter():
             self.ws.column_dimensions[get_column_letter(col_idx+1)].width = self.column_width
 
     def write_group(self, group_idx, tests):
+        print('INFO: start to write excel column with %d tests...' % len(tests))
         start = group_idx * math_group_cols + 1
         end = start + math_group_cols - 1
         for row_idx, row in enumerate(self.ws.iter_rows(min_col=start, max_row=len(tests), max_col=end)):
@@ -135,8 +139,10 @@ class XmlWriter():
             for col_idx, cell in enumerate(row):
                 cell.style = self.mystyle
                 cell.value = test[col_idx]
+        print('INFO: done. write one excel column')
 
     def export_to_pdf(self):
+        print('INFO: start to export xlsx as PDF...')
         xlsx_file = self.dest_filename
         pdf_file = xlsx_file.split('.xlsx')[0] + '.pdf'
         full_infile = os.getcwd() + '\\' + xlsx_file
@@ -147,6 +153,7 @@ class XmlWriter():
         Workbook = app.Workbooks.Open(full_infile)
         try:
             Workbook.ActiveSheet.ExportAsFixedFormat(0, full_outfile)
+            print('INFO: done. export PDF file to', full_outfile)
         except Exception as e:
             print("Failed to convert in PDF format.")
             print(str(e))
@@ -156,7 +163,9 @@ class XmlWriter():
             #os.system('del ' + full_infile)
 
     def save_to_file(self):
+        print('INFO: start to save excel xlsx to file...')
         self.wb.save(self.dest_filename)
+        print('INFO: done. write xlsx file to', self.dest_filename)
         self.export_to_pdf()
 
 def gen_math_tests(test_types):
@@ -181,6 +190,9 @@ def gen_math_tests(test_types):
         elif test_type == 'flex_mix':
             row0 += math.get_tests_flex_mix(math_group_rows)
             row1 += math.get_tests_flex_mix(math_group_rows)
+    test_num = len(row0)+len(row1)
+    page_num = (test_num + tests_per_page - 1)/ (tests_per_page)
+    print('INFO: %d tests in %d pages generated' %(test_num, page_num))
     return row0, row1
 
 def export_to_file(row0, row1):
