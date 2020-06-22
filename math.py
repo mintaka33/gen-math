@@ -161,7 +161,7 @@ class XmlWriter():
             print('INFO: export app exit')
             Workbook.Close()
             app.Quit()
-            #os.system('del ' + full_infile)
+            os.system('del ' + full_infile)
 
     def save_to_file(self):
         print('INFO: start to save excel xlsx to file...')
