@@ -10,8 +10,8 @@ import sys
 import os
 
 num_page = 10
-min1, max1 = 5, 20
-min2, max2 = 5, 20
+min1, max1 = 10, 30
+min2, max2 = 10, 30
 
 row_per_page = 25
 col_per_page = 2
