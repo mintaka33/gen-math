@@ -196,14 +196,16 @@ def gen_math_tests(test_types):
     print('INFO: %d tests in %d pages generated' %(test_num, page_num))
     return row0, row1
 
-def export_to_file(row0, row1):
+def export_to_pdf(row0, row1):
     xml = XmlWriter()
-    if len(row0) == len(row1) and len(row0) > 0:
-        # write tests to xml file
-        xml.write_group(0, row0)
-        xml.write_group(1, row1)
-        # save xml file
-        xml.save_to_file()
+    if len(row0) != len(row1) or len(row0) < 1:
+        print('ERROR: invalid math tests')
+        return
+    # write tests to xml file
+    xml.write_group(0, row0)
+    xml.write_group(1, row1)
+    # save xml file
+    xml.save_to_file()
 
 def helper():
     print("ERROR: invalid command line. example: python math.py ['add', 'sub', 'add_sub', 'mix']")
@@ -212,5 +214,5 @@ def helper():
 
 if __name__ == "__main__":
     r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
-    export_to_file(r0, r1)
+    export_to_pdf(r0, r1)
     print('done')
