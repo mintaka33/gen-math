@@ -1,6 +1,9 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font, Border, Side, Alignment
+from reportlab.lib.units import mm
+from reportlab.pdfgen import canvas
+from PyPDF4.pdf import PdfFileReader, PdfFileWriter
 from datetime import datetime
 from win32com import client
 import win32api
@@ -10,8 +13,8 @@ import sys
 import os
 
 num_page = 10
-min1, max1 = 10, 30
-min2, max2 = 10, 30
+min1, max1 = 15, 40
+min2, max2 = 15, 30
 
 row_per_page = 25
 col_per_page = 2
@@ -162,12 +165,13 @@ class XmlWriter():
             Workbook.Close()
             app.Quit()
             os.system('del ' + full_infile)
+            return pdf_file
 
     def save_to_file(self):
         print('INFO: start to save excel xlsx to file...')
         self.wb.save(self.dest_filename)
         print('INFO: done. write xlsx file to', self.dest_filename)
-        self.export_to_pdf()
+        return self.export_to_pdf()
 
 def gen_math_tests(test_types):
     math = MathTests()
@@ -205,7 +209,40 @@ def export_to_pdf(row0, row1):
     xml.write_group(0, row0)
     xml.write_group(1, row1)
     # save xml file
-    xml.save_to_file()
+    return xml.save_to_file()
+
+def createPagePdf(num, tmp):
+    c = canvas.Canvas(tmp)
+    for i in range(1, num + 1):
+        c.setFontSize(24)
+        c.drawString((210 // 2) * mm, (8) * mm, str(i))
+        c.showPage()
+    c.save()
+
+def add_page_numgers(pdf_path):
+    tmp = "__tmp.pdf"
+    output = PdfFileWriter()
+    with open(pdf_path, 'rb') as f:
+        pdf = PdfFileReader(f, strict=False)
+        n = pdf.getNumPages()
+        # create new PDF with page numbers
+        createPagePdf(n, tmp)
+        with open(tmp, 'rb') as ftmp:
+            numberPdf = PdfFileReader(ftmp)
+            # iterarte pages
+            for p in range(n):
+                page = pdf.getPage(p)
+                numberLayer = numberPdf.getPage(p)
+                # merge number page with actual page
+                page.mergePage(numberLayer)
+                output.addPage(page)
+            # write result
+            if output.getNumPages():
+                newpath = pdf_path[:-4] + "_num.pdf"
+                with open(newpath, 'wb') as f:
+                    output.write(f)
+        os.remove(tmp)
+        return newpath
 
 def helper():
     print("ERROR: invalid command line. example: python math.py ['add', 'sub', 'add_sub', 'mix']")
@@ -214,5 +251,10 @@ def helper():
 
 if __name__ == "__main__":
     r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
-    export_to_pdf(r0, r1)
+    pdf_filename = export_to_pdf(r0, r1)
+    print('INFO: Generated PDF file %s'%pdf_filename)
+    print('INFO: Start to add PDF page number ...')
+    new_pdfname = add_page_numgers(pdf_filename)
+    print('INFO: Generated PDF file %s with page number '%new_pdfname)
+    os.remove(pdf_filename)
     print('done')
