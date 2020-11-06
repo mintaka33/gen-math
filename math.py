@@ -14,7 +14,7 @@ import os
 
 num_page = 10
 min1, max1 = 15, 40
-min2, max2 = 15, 30
+min2, max2 = 15, 40
 
 row_per_page = 25
 col_per_page = 2
@@ -225,8 +225,11 @@ def add_page_numgers(pdf_path):
     with open(pdf_path, 'rb') as f:
         pdf = PdfFileReader(f, strict=False)
         n = pdf.getNumPages()
+        print('INFO: PDF file number = %d' % n)
         # create new PDF with page numbers
+        print('INFO: Start to create page PDF file')
         createPagePdf(n, tmp)
+        print('INFO: Page PDF file created, start to merge with original PDF...')
         with open(tmp, 'rb') as ftmp:
             numberPdf = PdfFileReader(ftmp)
             # iterarte pages
@@ -253,7 +256,7 @@ if __name__ == "__main__":
     r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
     pdf_filename = export_to_pdf(r0, r1)
     print('INFO: Generated PDF file %s'%pdf_filename)
-    print('INFO: Start to add PDF page number ...')
+    print('INFO: Start to add PDF page number...')
     new_pdfname = add_page_numgers(pdf_filename)
     print('INFO: Generated PDF file %s with page number '%new_pdfname)
     os.remove(pdf_filename)
