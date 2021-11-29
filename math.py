@@ -12,9 +12,10 @@ import random
 import sys
 import os
 
-num_page = 10
-min1, max1 = 10, 50
-min2, max2 = 10, 50
+num_page = 20
+max_value = 10
+min1, max1 = 1, 11
+min2, max2 = 0, 11
 
 row_per_page = 25
 col_per_page = 2
@@ -38,24 +39,30 @@ class MathTests():
         self.testset_sub = []
         self.testset_add_flex = []
         self.testset_sub_flex = []
+
         for i in range(min1, max1):
             for j in range(min2, max2):
-                test = [str(i), '+', str(j), '=', ' ', ' ']
-                self.testset_add.append(test)
+                if i+j <= max_value:
+                    test = [str(i), '+', str(j), '=', ' ', ' ']
+                    self.testset_add.append(test)
         print('INFO: total', len(self.testset_add), 'tests in ADD set')
+
         for i in range(min1, max1):
             for j in range(min2, max2):
-                test1 = [str(i), '+', ' ', '=', str(i+j), ' ']
-                test2 = [' ', '+', str(j), '=', str(i+j), ' ']
-                self.testset_add_flex.append(test1)
-                self.testset_add_flex.append(test2)
+                if i+j <= max_value:
+                    test1 = [str(i), '+', ' ', '=', str(i+j), ' ']
+                    test2 = [' ', '+', str(j), '=', str(i+j), ' ']
+                    self.testset_add_flex.append(test1)
+                    self.testset_add_flex.append(test2)
         print('INFO: total', len(self.testset_add_flex), 'tests in ADD_Flex set')
+
         for i in range(min1, max1):
             for j in range(min2, max2):
                 if (i - j) > 0:
                     test = [str(i), '-', str(j), '=', ' ', ' ']
                     self.testset_sub.append(test)
         print('INFO: total', len(self.testset_sub), 'tests in SUB set')
+
         for i in range(min1, max1):
             for j in range(min2, max2):
                 if (i - j) > 0:
@@ -106,6 +113,14 @@ class MathTests():
         mix_flex_tests = add_flex_tests + sub_flex_tests
         random.shuffle(mix_flex_tests)
         return mix_flex_tests
+
+    def get_tests_all_mix(self, num):
+        all_mix_tests  = self.get_tests_add(num)
+        all_mix_tests += self.get_tests_sub(num)
+        all_mix_tests += self.get_tests_add_flex(num)
+        all_mix_tests += self.get_tests_sub_flex(num)
+        random.shuffle(all_mix_tests)
+        return all_mix_tests[:num]
 
 class XmlWriter():
     def __init__(self):
@@ -195,6 +210,9 @@ def gen_math_tests(test_types):
         elif test_type == 'flex_mix':
             row0 += math.get_tests_flex_mix(math_group_rows)
             row1 += math.get_tests_flex_mix(math_group_rows)
+        elif test_type == 'all_mix':
+            row0 += math.get_tests_all_mix(math_group_rows)
+            row1 += math.get_tests_all_mix(math_group_rows)
     test_num = len(row0)+len(row1)
     page_num = (test_num + tests_per_page - 1)/ (tests_per_page)
     print('INFO: %d tests in %d pages generated' %(test_num, page_num))
@@ -253,7 +271,8 @@ def helper():
     exit()
 
 if __name__ == "__main__":
-    r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
+    r0, r1 = gen_math_tests(['all_mix'])
+    # r0, r1 = gen_math_tests(['add', 'sub', 'add_sub', 'mix', 'flex', 'flex_mix'])
     pdf_filename = export_to_pdf(r0, r1)
     print('INFO: Generated PDF file %s'%pdf_filename)
     print('INFO: Start to add PDF page number...')
